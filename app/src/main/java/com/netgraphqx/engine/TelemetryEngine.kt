@@ -53,7 +53,7 @@ class TelemetryEngine(private val context: Context) {
     /**
      * Observable stream of user-facing errors.
      *
-     * Emits [TelemetryError] when a permanent issue is detected (no WiFi
+     * Emits [TelemetryError] when a permanent issue is confirmed (no WiFi
      * hardware, no permission, no connection) and `null` after the error
      * has been acknowledged via [dismissError].
      */
@@ -65,25 +65,32 @@ class TelemetryEngine(private val context: Context) {
     }
 
     /**
+     * Consecutive ticks that returned an error SSID (e.g. "<no WiFi>").
+     * We require 3 in a row before showing the dialog to avoid false
+     * positives during system initialisation.
+     */
+    private var consecutiveBadTicks = 0
+
+    /**
      * Infinite flow of AP telemetry ticks.
      *
      * Each tick reads WiFi connection info (instant) and performs a real ICMP
      * ping to the default gateway. Every exception is caught so the flow never
-     * terminates — on error it emits a DOWN tick with a descriptive message.
+     * terminates.
      *
-     * Permanent errors (no hardware, no permission, disconnected) are also
-     * emitted to [errorEvent] so the UI can show a dialog.
+     * Permanent errors (no hardware, no permission, disconnected) are detected
+     * from the tick data and emitted to [errorEvent] after **3 consecutive bad
+     * ticks** (approx. 3 seconds) to avoid false positives during startup.
      */
     fun observeTelemetry(): Flow<ApTelemetryTick> = flow {
-        // Emit initial error state on first tick
-        checkAndEmitError()
-
         while (true) {
             try {
                 val tick = measureTick()
                 emit(tick)
-                // Update error state based on current conditions
-                checkAndEmitError()
+                // Detect persistent errors from the tick content, not by
+                // interrogating WifiManager directly (which can return
+                // incomplete data at startup).
+                detectErrorFromTick(tick)
             } catch (e: Exception) {
                 _errorEvent.value = TelemetryError.Generic(
                     "An unexpected error occurred:\n${e.message?.take(120) ?: "Unknown error"}"
@@ -159,34 +166,39 @@ class TelemetryEngine(private val context: Context) {
     // ── Error detection ──────────────────────────────────────────────
 
     /**
-     * Check current conditions and emit an error event if a permanent
-     * problem exists. If the condition recovers, existing errors are
-     * NOT auto-cleared — the user must tap OK — because the initial
-     * error happened during this session and remains informative.
+     * Examine the last emitted tick and decide whether to show an error
+     * dialog.  We require **3 consecutive bad ticks** (~3 s) before
+     * firing the dialog to avoid false positives during WiFi init.
      *
-     * Priority: NoWiFiHardware > PermissionDenied > NotConnected
+     * Error priority: NoWifiHardware > PermissionDenied > NotConnected
      */
-    @Suppress("DEPRECATION")
-    private fun checkAndEmitError() {
-        // Don't overwrite an existing error that the user hasn't dismissed
-        if (_errorEvent.value != null) return
+    private fun detectErrorFromTick(tick: ApTelemetryTick) {
+        if (_errorEvent.value != null) return     // user hasn't dismissed yet
 
-        val error = when {
-            wifiManager == null -> TelemetryError.NoWifiHardware
-            else -> {
-                val info = try {
-                    wifiManager?.connectionInfo
-                } catch (_: SecurityException) { null }
-                when {
-                    info == null -> TelemetryError.NotConnected
-                    info.ssid == null || info.ssid == "<unknown ssid>" || info.ssid == "0x" ->
-                        TelemetryError.PermissionDenied
-                    info.rssi == Int.MAX_VALUE -> TelemetryError.NotConnected
-                    else -> null
-                }
-            }
+        // A tick with real data — reset the bad counter
+        if (!tick.ssid.startsWith("<")) {
+            consecutiveBadTicks = 0
+            return
         }
-        if (error != null) _errorEvent.value = error
+
+        consecutiveBadTicks++
+
+        // Wait for 3 consecutive bad ticks before showing a dialog
+        if (consecutiveBadTicks < 3) return
+
+        // Map the tick's SSID placeholder to the correct error type
+        val error = when (tick.ssid) {
+            "<no WiFi>" -> when {
+                wifiManager == null -> TelemetryError.NoWifiHardware
+                else -> TelemetryError.NotConnected
+            }
+            "<no permission>" -> TelemetryError.PermissionDenied
+            else -> TelemetryError.Generic(
+                "Cannot read WiFi data (${tick.ssid.removeSurrounding("<", ">")}). " +
+                "Check your WiFi connection and try again."
+            )
+        }
+        _errorEvent.value = error
     }
 
     // ── Private helpers ─────────────────────────────────────────────

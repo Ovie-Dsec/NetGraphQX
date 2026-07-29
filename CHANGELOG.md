@@ -5,6 +5,19 @@ All notable changes to NetGraph QX are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-07-29
+
+### Fixed
+- **False "Not Connected" dialog**: Error detection no longer fires before
+  the first telemetry tick. Errors are now detected from tick content (SSID
+  being `<no WiFi>`, `<no permission>`) rather than interrogating
+  `WifiManager.connectionInfo` directly — which could return null transiently
+  during WiFi initialisation.
+- **3-consecutive-bad-ticks guard**: The error dialog only appears after
+  three ticks in a row (≈3 seconds) show a persistent issue, preventing
+  transient startup blips from triggering false dialogs.
+- Version bumped to **1.2.1** (build 6).
+
 ## [1.2.0] - 2026-07-29
 
 ### Added
