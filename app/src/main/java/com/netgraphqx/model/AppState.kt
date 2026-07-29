@@ -121,7 +121,11 @@ sealed class TelemetryError(
     /** Required runtime permission not granted. */
     data object PermissionDenied : TelemetryError(
         title = "Permission Required",
-        message = "NetGraph QX needs the \"Nearby Devices\" permission (Android 13+) or location permission (Android 12 and below) to read the WiFi name and signal strength.\n\nGo to Settings → Apps → NetGraph QX → Permissions and grant the required permission, then restart telemetry."
+        message = "NetGraph QX needs the \"Nearby Devices\" permission (Android 13+) or location permission (Android 12 and below) to read the WiFi name and signal strength.\n\n" +
+                "If you already granted the permission and still see this message:\n" +
+                "• Make sure Location services are enabled in Quick Settings\n" +
+                "• Try toggling WiFi off and on\n" +
+                "• Restart the app after granting the permission"
     )
 
     /** Device is not connected to any WiFi network. */

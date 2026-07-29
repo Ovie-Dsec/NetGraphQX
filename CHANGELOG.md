@@ -5,6 +5,21 @@ All notable changes to NetGraph QX are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-07-29
+
+### Added
+- **System permission dialog**: When WiFi permission is missing, the app now
+  triggers the standard Android system permission dialog (instead of just
+  showing a custom dialog with instructions). If the user grants permission,
+  telemetry starts working immediately.
+- **API-aware permission request**: Requests `NEARBY_WIFI_DEVICES` on API 33+
+  and `ACCESS_FINE_LOCATION` on API 32 and below, using the correct permission
+  for the device's API level.
+- **Updated error message**: The Permission Denied dialog now also suggests
+  enabling Location services and toggling WiFi, since some devices require
+  location to be enabled for SSID access even when the permission is granted.
+- Version bumped to **1.2.2** (build 7).
+
 ## [1.2.1] - 2026-07-29
 
 ### Fixed

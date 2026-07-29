@@ -1,9 +1,15 @@
 package com.netgraphqx
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -137,8 +143,48 @@ private fun NetGraphQXApp() {
     // Observe telemetry error events for dialog display
     val telemetryError by telemetryEngine.errorEvent.collectAsState()
 
-    // Show error dialog when telemetry has a permanent issue
-    if (telemetryError != null) {
+    // ── Runtime permission request ───────────────────────────────────
+    // Determine which permission to request based on API level
+    val wifiPermission = remember {
+        if (Build.VERSION.SDK_INT >= 33)
+            Manifest.permission.NEARBY_WIFI_DEVICES
+        else
+            Manifest.permission.ACCESS_FINE_LOCATION
+    }
+
+    // Track whether we've already fired the system permission dialog
+    // for the current error — avoids re-requesting in an infinite loop.
+    var systemPromptShown by remember { mutableStateOf(false) }
+
+    // Launch the system permission dialog
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        systemPromptShown = false     // reset for the next error cycle
+        if (granted) {
+            telemetryEngine.dismissError()
+        } else {
+            // User denied — show our custom dialog with instructions
+            // (the error is already set, so we just let the dialog render)
+        }
+    }
+
+    // When PermissionDenied fires and we haven't yet shown the system
+    // prompt, launch the real system permission dialog.
+    if (telemetryError is TelemetryError.PermissionDenied && !systemPromptShown) {
+        systemPromptShown = true
+        LaunchedEffect(Unit) {
+            permissionLauncher.launch(wifiPermission)
+        }
+    }
+
+    // Show error dialog for non-permission errors, or as a fallback
+    // after the user has seen and denied the system permission dialog.
+    val showDialog = telemetryError != null && (
+        telemetryError !is TelemetryError.PermissionDenied || systemPromptShown
+    )
+
+    if (showDialog) {
         AlertDialog(
             onDismissRequest = { telemetryEngine.dismissError() },
             title = {
