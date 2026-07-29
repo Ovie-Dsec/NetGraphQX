@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.netgraphqx.engine.MathEngine
@@ -83,7 +84,8 @@ private fun NetGraphQXApp() {
 
     // ── Engine instances ──────────────────────────────────────────
     val mathEngine = remember { MathEngine() }
-    val telemetryEngine = remember { TelemetryEngine() }
+    val context = LocalContext.current
+    val telemetryEngine = remember { TelemetryEngine(context.applicationContext) }
 
     // ── Derived: math samples ─────────────────────────────────────
     val samples by remember(expression, viewport) {
@@ -124,7 +126,6 @@ private fun NetGraphQXApp() {
     // Collect AP telemetry ticks when in TELEMETRY mode
     LaunchedEffect(currentMode) {
         if (currentMode == AppMode.TELEMETRY) {
-            telemetryEngine.reset()
             telemetryEngine.observeTelemetry().collect { tick ->
                 apTick = tick
             }

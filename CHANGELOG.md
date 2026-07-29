@@ -5,6 +5,39 @@ All notable changes to NetGraph QX are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-29
+
+### Added
+- **Real WiFi telemetry**: TelemetryEngine now reads live WiFi connection data
+  from the device using `WifiManager` (SSID, BSSID, RSSI, IP address, link speed,
+  frequency band) instead of simulated values.
+- **Real ICMP ping**: Each telemetry tick performs an actual `ping -c 1` to the
+  default gateway to measure real latency and reachability. The UP/DOWN/UNSTABLE
+  badge now reflects real connectivity.
+- **Internet reachability check**: Uses `ConnectivityManager` to verify actual
+  internet capability alongside gateway reachability.
+- **Signal strength from RSSI**: Signal percentage is now derived from real RSSI
+  readings (`-100 dBm` → 0%, `-40 dBm` → 100%) instead of simulation.
+- **Permissions**: Added `NEARBY_WIFI_DEVICES` (API 33+, auto-granted) and
+  `ACCESS_FINE_LOCATION` (API 32-, legacy) to `AndroidManifest.xml` for reading
+  SSID/BSSID.
+- **Graceful degradation**: When required permissions are missing, the engine
+  returns `<no permission>` for SSID/BSSID and shows DOWN for affected fields
+  instead of crashing.
+- **Public API methods**: `getCurrentSsid()` and `getGatewayIp()` exposed for
+  external use by future tools.
+
+### Changed
+- `TelemetryEngine` constructor now requires `Context` (passed from `MainActivity`
+  via `LocalContext.current.applicationContext`).
+- `reset()` and `switchAp()` are no-ops in the real engine (kept for API
+  compatibility).
+- Version bumped to **1.2.0** (build 5).
+
+### Removed
+- All simulated AP name lists, BSSID pools, gateway IP pools, and random
+  wobble/dropout logic. The engine now measures truth instead of generating it.
+
 ## [1.1.0] - 2026-07-29
 
 ### Added
