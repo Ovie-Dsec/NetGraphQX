@@ -9,7 +9,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import com.netgraphqx.BuildConfig
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -132,10 +134,45 @@ private fun NetGraphQXApp() {
         }
     }
 
+    // Observe telemetry error events for dialog display
+    val telemetryError by telemetryEngine.errorEvent.collectAsState()
+
+    // Show error dialog when telemetry has a permanent issue
+    if (telemetryError != null) {
+        AlertDialog(
+            onDismissRequest = { telemetryEngine.dismissError() },
+            title = {
+                Text(
+                    text = telemetryError!!.title,
+                    color = TextPrimary,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = telemetryError!!.message,
+                    color = TextSecondary,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 13.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { telemetryEngine.dismissError() }) {
+                    Text("OK", color = AccentCyan, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = DarkSurface,
+            titleContentColor = TextPrimary,
+            textContentColor = TextSecondary
+        )
+    }
+
     // Reset state when switching modes
     LaunchedEffect(currentMode) {
         if (currentMode == AppMode.MATHEMATICS) {
             apTick = null
+            telemetryEngine.dismissError()
             viewport = Viewport()
             traceX = null
         }

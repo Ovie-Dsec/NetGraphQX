@@ -101,6 +101,45 @@ data class Viewport(
 }
 
 /**
+ * User-facing telemetry errors that should be shown as a dialog.
+ *
+ * Each variant carries a human-readable title and body message.
+ * Persistent errors (no hardware, no permission, no WiFi) are shown
+ * once and remain until dismissed. Transient errors are handled
+ * silently through the tick's status/color instead.
+ */
+sealed class TelemetryError(
+    open val title: String,
+    open val message: String
+) {
+    /** Device lacks WiFi hardware (tablet, emulator, etc.). */
+    data object NoWifiHardware : TelemetryError(
+        title = "No WiFi Hardware",
+        message = "This device does not have WiFi hardware. Telemetry mode requires an active WiFi connection to display live data."
+    )
+
+    /** Required runtime permission not granted. */
+    data object PermissionDenied : TelemetryError(
+        title = "Permission Required",
+        message = "NetGraph QX needs the \"Nearby Devices\" permission (Android 13+) or location permission (Android 12 and below) to read the WiFi name and signal strength.\n\nGo to Settings → Apps → NetGraph QX → Permissions and grant the required permission, then restart telemetry."
+    )
+
+    /** Device is not connected to any WiFi network. */
+    data object NotConnected : TelemetryError(
+        title = "Not Connected to WiFi",
+        message = "Connect to a WiFi network first, then switch to Telemetry mode to see live AP data."
+    )
+
+    /** Catch-all for unexpected errors. */
+    data class Generic(
+        override val message: String
+    ) : TelemetryError(
+        title = "Telemetry Error",
+        message = message
+    )
+}
+
+/**
  * Canvas interaction state for touch gestures.
  */
 data class TouchState(

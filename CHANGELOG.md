@@ -8,6 +8,14 @@ and versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 ## [1.2.0] - 2026-07-29
 
 ### Added
+- **Error dialog for telemetry issues**: When telemetry mode detects a
+  permanent problem (no WiFi hardware, missing permission, no connection),
+  a dialog pops up with a plain-English explanation and an OK button instead
+  of silently showing broken data.
+- **`TelemetryError` sealed class**: `NoWifiHardware`, `PermissionDenied`,
+  `NotConnected`, and `Generic` variants with human-readable title + message.
+- **`errorEvent: StateFlow<TelemetryError?>`**: Public error stream on the
+  engine observed by the UI via `collectAsState()`.
 - **Real WiFi telemetry**: TelemetryEngine now reads live WiFi connection data
   from the device using `WifiManager` (SSID, BSSID, RSSI, IP address, link speed,
   frequency band) instead of simulated values.
