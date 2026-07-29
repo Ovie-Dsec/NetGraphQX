@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NetGraph QX</string>
+    <string name="mode_math">Mathematics</string>
+    <string name="mode_telemetry">Telemetry</string>
+    <string name="expression_hint">Enter f(x) expression...</string>
+    <string name="btn_sin">sin</string>
+    <string name="btn_cos">cos</string>
+    <string name="btn_tan">tan</string>
+    <string name="btn_sqrt">√</string>
+    <string name="btn_pow">^</string>
+    <string name="btn_log">log</string>
+    <string name="btn_ln">ln</string>
+    <string name="btn_ping">PING</string>
+    <string name="btn_trace">TRACE</string>
+    <string name="btn_cpu">CPU</string>
+    <string name="btn_mem">MEM</string>
+    <string name="legend_optimal">Optimal</string>
+    <string name="legend_degraded">Degraded</string>
+    <string name="legend_critical">Critical</string>
+</resources>

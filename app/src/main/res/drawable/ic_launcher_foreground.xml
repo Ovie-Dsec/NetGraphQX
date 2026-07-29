@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Graph curve icon -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M18,72 Q36,30 54,54 T90,36"
+        android:strokeWidth="3"
+        android:strokeColor="#00E5FF"
+        android:fillAlpha="0" />
+    <!-- Circle dot at curve end -->
+    <path
+        android:fillColor="#E94560"
+        android:pathData="M86,36 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0" />
+    <!-- Grid lines -->
+    <path
+        android:strokeColor="#2A2A4A"
+        android:strokeWidth="0.8"
+        android:pathData="M18,18 L18,90 M36,18 L36,90 M54,18 L54,90 M72,18 L72,90 M90,18 L90,90"
+        android:fillAlpha="0" />
+    <path
+        android:strokeColor="#2A2A4A"
+        android:strokeWidth="0.8"
+        android:pathData="M18,18 L90,18 M18,36 L90,36 M18,54 L90,54 M18,72 L90,72 M18,90 L90,90"
+        android:fillAlpha="0" />
+</vector>

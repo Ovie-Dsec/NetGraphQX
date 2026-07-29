@@ -1,0 +1,65 @@
+# Changelog
+
+All notable changes to NetGraph QX are documented here.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.2] - 2026-07-29
+
+### Added
+- **Version tracking**: `CHANGELOG.md` created to document all releases. Version
+  now reads from `BuildConfig` (automatically set from `build.gradle.kts`) and
+  displays as `v1.0.2 (build 3)` in the title bar.
+- **APK artifact naming**: APKs are saved with versioned filenames
+  (`NetGraphQX-v1.0.2.apk`) alongside the generic `NetGraphQX-debug.apk` for
+  quick install.
+
+### Fixed
+- **Canvas rendering at zero height**: `GraphCanvas` used `.fillMaxWidth()` but had no height
+  modifier. Compose `Canvas` has zero intrinsic size, so the graph area collapsed to 0px
+  tall. Changed to `.fillMaxSize()` so the canvas fills its allocated `weight()` space.
+- **Canvas now visible**: Mathematical curves and telemetry waveforms render properly
+  rather than producing an invisible graph area.
+
+## [1.0.1] - 2026-07-29
+
+### Added
+- **Calculation result display**: The expression bar now distinguishes between pure
+  arithmetic (no `x` variable) and function expressions. For arithmetic like `2+2`,
+  the result `= 4` is shown in large cyan text in the bottom bar.
+- `CalculationResult` sealed class to model arithmetic values, functions, errors,
+  and empty states.
+
+### Changed
+- `ExpressionBar` composable now accepts a `result` parameter and adjusts its
+  display format accordingly.
+- `TopBar` simplified (removed unused `expression` parameter).
+
+## [1.0.0] - 2026-07-29
+
+### Added
+- **Full project scaffold**: Android Kotlin project with Jetpack Compose.
+- **Dual-mode architecture** with top toggle:
+  - `MATHEMATICS` mode: function graphing via exp4j expression parser.
+  - `TELEMETRY` mode: real-time network/hardware data streaming via coroutines.
+- **Three-section UI layout**:
+  - Section 1: Custom Compose Canvas graph viewport (40% base, dynamically
+    expands when sections 2/3 collapse).
+  - Section 2: Function/macro pad with quick-access buttons (collapsible).
+  - Section 3: Full in-app QWERTY keypad (collapsible, suppresses OS keyboard).
+- **MathEngine.kt**: exp4j wrapper with `validate()`, `evaluate()`, `sample()`,
+  `adaptiveSample()`, built-in function shortcuts.
+- **TelemetryEngine.kt**: `Flow<TelemetryTick>` emitter at 250ms with simulated
+  ping, packet loss, CPU, and memory data; 300-entry ring buffer.
+- **GraphCanvas.kt**: 60 FPS Compose Canvas with Cartesian grid, curve rendering,
+  waveform plots, color-coded thresholds, pinch-to-zoom, pan, and tap-to-trace
+  crosshair with tooltip.
+- **InAppKeypad.kt**: Full QWERTY key matrix (6 rows: numbers, letters, symbols,
+  operators) with CLR/Space/Enter action keys.
+- **Dark theme**: Monospace typography, Material3 dark color scheme, telemetry
+  status colors (green/yellow/red).
+- **Adaptive launcher icon**: Custom vector icon with graph curve and grid lines.
+- **Build configuration**: Gradle 8.9, AGP 8.7.2, Kotlin 2.0.21, Compose BOM
+  2024.12.01, exp4j 0.4.8, target SDK 36.
+- **APK output**: Debug APK built and copied to `APKs/` directory.
