@@ -118,40 +118,23 @@ private fun NetGraphQXApp() {
         }
     }
 
-    // ── Telemetry tick collection ─────────────────────────────────
-    val telemetryTicks = remember { mutableStateListOf<TelemetryTick>() }
-    val telemetryScope = rememberCoroutineScope()
+    // ── AP telemetry state ────────────────────────────────────────
+    var apTick by remember { mutableStateOf<ApTelemetryTick?>(null) }
 
-    // Collect telemetry ticks when in TELEMETRY mode
+    // Collect AP telemetry ticks when in TELEMETRY mode
     LaunchedEffect(currentMode) {
         if (currentMode == AppMode.TELEMETRY) {
             telemetryEngine.reset()
-            telemetryTicks.clear()
             telemetryEngine.observeTelemetry().collect { tick ->
-                telemetryTicks.add(tick)
-                // Keep only the last 300 ticks in the UI ring
-                if (telemetryTicks.size > 300) {
-                    telemetryTicks.removeAt(0)
-                }
+                apTick = tick
             }
         }
     }
 
-    // Auto-fit viewport for telemetry data
-    LaunchedEffect(currentMode, telemetryTicks.size) {
-        if (currentMode == AppMode.TELEMETRY && telemetryTicks.size > 1) {
-            viewport = Viewport(
-                xMin = 0f,
-                xMax = telemetryTicks.size.coerceAtLeast(50).toFloat(),
-                yMin = 0f,
-                yMax = 1f
-            )
-        }
-    }
-
-    // Reset viewport when switching to math mode
+    // Reset state when switching modes
     LaunchedEffect(currentMode) {
         if (currentMode == AppMode.MATHEMATICS) {
+            apTick = null
             viewport = Viewport()
             traceX = null
         }
@@ -211,7 +194,7 @@ private fun NetGraphQXApp() {
                 mode = currentMode,
                 expression = expression,
                 samples = samples,
-                telemetryTicks = telemetryTicks.toList(),
+                apTick = apTick,
                 viewport = viewport,
                 onViewportChange = { viewport = it },
                 traceX = traceX,
@@ -219,8 +202,8 @@ private fun NetGraphQXApp() {
             )
 
             // Status overlay for telemetry mode
-            if (currentMode == AppMode.TELEMETRY && telemetryTicks.isNotEmpty()) {
-                TelemetryStatusBar(telemetryTicks.last())
+            if (currentMode == AppMode.TELEMETRY && apTick != null) {
+                TelemetryStatusBar(apTick!!)
             }
         }
 
@@ -452,30 +435,32 @@ private fun formatResult(v: Float): String {
  * Telemetry status overlay displayed on the canvas in telemetry mode.
  */
 @Composable
-private fun TelemetryStatusBar(tick: TelemetryTick) {
+private fun TelemetryStatusBar(tick: ApTelemetryTick) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(DarkBackground.copy(alpha = 0.7f))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .background(DarkBackground.copy(alpha = 0.85f))
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        MetricChip("PING", "${tick.pingLatencyMs.roundToInt()}ms", tick.statusColor)
-        MetricChip("LOSS", "${"%.1f".format(tick.packetLossPct)}%", tick.statusColor)
-        MetricChip("CPU", "${tick.cpuLoadPct.roundToInt()}%", tick.statusColor)
-        MetricChip("MEM", "${tick.memoryLoadPct.roundToInt()}%", tick.statusColor)
+        ApMetricChip("SSID", tick.ssid, tick.statusColor)
+        ApMetricChip("SIGNAL", "${tick.signalStrength.roundToInt()}%", tick.statusColor)
+        ApMetricChip("LATENCY", "${tick.latencyMs.roundToInt()}ms", tick.statusColor)
+        ApMetricChip("STATUS", tick.status.label, tick.statusColor)
     }
 }
 
 @Composable
-private fun MetricChip(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
+private fun ApMetricChip(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,
             color = color,
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
-            fontFamily = FontFamily.Monospace
+            fontFamily = FontFamily.Monospace,
+            maxLines = 1
         )
         Text(
             text = label,

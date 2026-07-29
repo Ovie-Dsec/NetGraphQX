@@ -115,8 +115,8 @@ private fun MathFunctionGrid(onInsert: (String) -> Unit) {
 @Composable
 private fun TelemetryMacroGrid(onInsert: (String) -> Unit) {
     val macros = listOf(
-        listOf("PING", "TRACERT", "NSLOOKUP"),
-        listOf("CPU", "MEM", "NETSTAT")
+        listOf("PING GW", "SCAN", "SIGNAL"),
+        listOf("CHANNEL", "BAND", "STATUS")
     )
 
     for (row in macros) {

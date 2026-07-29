@@ -5,6 +5,40 @@ All notable changes to NetGraph QX are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-29
+
+### Added
+- **AP arrow visualization**: Telemetry mode now shows a visual arrow from a
+  device icon (bottom centre) pointing upward to an access point icon (top centre),
+  with concentric signal rings around the arrow shaft.
+- **Live status badge**: A large UP/DOWN/UNSTABLE badge is displayed on the right
+  side of the canvas, color-coded green/yellow/red.
+- **Signal strength bars**: Five vertical bars on the left side of the canvas
+  indicate signal quality (0-100%).
+- **Info panel**: Text panel below the device shows IP, BSSID, latency, and status.
+- **Status bar metrics**: Bottom overlay now shows SSID, SIGNAL%, LATENCY, and
+  STATUS instead of PING/LOSS/CPU/MEM.
+- **New function pad macros**: Telemetry pad replaced with PING GW, SCAN, SIGNAL,
+  CHANNEL, BAND, and STATUS.
+- **Version bump**: v1.1.0 (build 4).
+
+### Changed
+- **TelemetryEngine rewritten**: Emits `Flow<ApTelemetryTick>` at 1-second
+  intervals. Simulates real AP connectivity data: SSID, BSSID, signal strength,
+  gateway ping latency, and random reachable/unreachable transitions.
+- **AppState model updated**: `TelemetryTick` replaced with `ApTelemetryTick`
+  (fields: ssid, bssid, ipAddress, signalStrength, latencyMs, reachable, status,
+  statusColor). New `ApStatus` enum (UP/DOWN/UNSTABLE).
+- **GraphCanvas telemetry signature**: `telemetryTicks: List<TelemetryTick>`
+  replaced with `apTick: ApTelemetryTick?`. Canvas now calls `drawApVisualization()`
+  instead of `drawTelemetryGrid()`/`drawTelemetryWaveform()`.
+- **MainActivity telemetry collection**: Uses a single `ApTelemetryTick?` state
+  variable instead of a 300-entry list ring buffer.
+
+### Removed
+- `drawTelemetryGrid()` and `drawTelemetryWaveform()` from `GraphCanvas.kt`.
+- Old PING/TRACERT/NSLOOKUP/CPU/MEM/NETSTAT telemetry macros.
+
 ## [1.0.2] - 2026-07-29
 
 ### Added

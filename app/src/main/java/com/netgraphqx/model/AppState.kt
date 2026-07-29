@@ -10,7 +10,7 @@ enum class AppMode {
     /** Mathematical function graphing mode */
     MATHEMATICS,
 
-    /** Network & hardware telemetry mode */
+    /** Network telemetry mode — access point status */
     TELEMETRY
 }
 
@@ -24,40 +24,48 @@ data class GraphPoint(
 )
 
 /**
- * Telemetry status thresholds mapped to color coding.
+ * Whether the access point is reachable.
  */
-enum class TelemetryStatus(val label: String, val threshold: Float) {
-    OPTIMAL("Optimal", 0.0f),   // Green  — 0-40%负载/延迟
-    DEGRADED("Degraded", 0.4f), // Yellow — 40-80%
-    CRITICAL("Critical", 0.8f)  // Red    — 80%+
+enum class ApStatus(val label: String) {
+    UP("UP"),
+    DOWN("DOWN"),
+    UNSTABLE("UNSTABLE")
 }
 
 /**
- * A single telemetry metric snapshot.
+ * A single telemetry snapshot focused on the access point the device
+ * is connected to.
+ *
+ * @property ssid Network name (SSID) of the access point.
+ * @property bssid BSSID / MAC address of the AP radio.
+ * @property ipAddress Gateway IP address.
+ * @property signalStrength Signal level 0..100 (100 = best).
+ * @property latencyMs Round-trip ping time to the gateway in ms.
+ * @property reachable Whether the gateway responded to the last ping.
+ * @property status Derived UP / DOWN / UNSTABLE status.
+ * @property timestamp Epoch millis when this tick was captured.
  */
-data class TelemetryTick(
-    val pingLatencyMs: Float,
-    val packetLossPct: Float,
-    val cpuLoadPct: Float,
-    val memoryLoadPct: Float,
+data class ApTelemetryTick(
+    val ssid: String,
+    val bssid: String,
+    val ipAddress: String,
+    val signalStrength: Float,   // 0..100
+    val latencyMs: Float,         // ms
+    val reachable: Boolean,
     val timestamp: Long = System.currentTimeMillis()
 ) {
-    /** Derive composite status from the worst metric. */
-    val compositeStatus: TelemetryStatus
-        get() {
-            val worst = maxOf(pingLatencyMs / 500f, packetLossPct / 100f, cpuLoadPct / 100f, memoryLoadPct / 100f)
-            return when {
-                worst >= TelemetryStatus.CRITICAL.threshold -> TelemetryStatus.CRITICAL
-                worst >= TelemetryStatus.DEGRADED.threshold -> TelemetryStatus.DEGRADED
-                else -> TelemetryStatus.OPTIMAL
-            }
+    val status: ApStatus
+        get() = when {
+            !reachable -> ApStatus.DOWN
+            latencyMs > 500f || signalStrength < 15f -> ApStatus.UNSTABLE
+            else -> ApStatus.UP
         }
 
     val statusColor: Color
-        get() = when (compositeStatus) {
-            TelemetryStatus.OPTIMAL -> Color(0xFF00E676)
-            TelemetryStatus.DEGRADED -> Color(0xFFFFD600)
-            TelemetryStatus.CRITICAL -> Color(0xFFFF1744)
+        get() = when (status) {
+            ApStatus.UP -> Color(0xFF00E676)       // green
+            ApStatus.UNSTABLE -> Color(0xFFFFD600) // yellow
+            ApStatus.DOWN -> Color(0xFFFF1744)     // red
         }
 }
 
